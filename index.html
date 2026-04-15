@@ -794,10 +794,9 @@
   </footer>
 
   <script>
-    // Form submission handler (demo — wire to backend of choice)
-    function handleSubmit(e) {
+    // Form submission handler
+    async function handleSubmit(e) {
       e.preventDefault();
-      const name = document.getElementById('name').value.trim();
       const locName = document.getElementById('location-name').value.trim();
 
       if (!locName) {
@@ -806,15 +805,42 @@
         return;
       }
 
-      // Show success
-      document.getElementById('formSuccess').style.display = 'block';
+      const data = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        location: locName,
+        region: document.getElementById('region').value,
+        vibe: document.getElementById('vibe').value,
+        description: document.getElementById('description').value.trim(),
+      };
 
-      // Reset fields
-      ['name','email','location-name','description'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
-      document.getElementById('region').selectedIndex = 0;
-      document.getElementById('vibe').selectedIndex = 0;
+      const btn = e.target;
+      btn.disabled = true;
+      btn.textContent = 'Transmitting...';
+
+      try {
+        const res = await fetch('https://formspree.io/f/mgorvgbn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (res.ok) {
+          document.getElementById('formSuccess').style.display = 'block';
+          ['name','email','location-name','description'].forEach(id => {
+            document.getElementById(id).value = '';
+          });
+          document.getElementById('region').selectedIndex = 0;
+          document.getElementById('vibe').selectedIndex = 0;
+        } else {
+          alert('Transmission failed. Please try again.');
+        }
+      } catch (err) {
+        alert('Transmission failed. Please check your connection and try again.');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Transmit Location';
     }
 
     // Subtle scroll reveal
