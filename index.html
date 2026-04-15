@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DEAD SANDS — Survive the Desert</title>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --void: #060402;
+      --bone: #D4C4A0;
+      --sand: #B89660;
+      --rust: #8B2A1A;
+      --blood: #6B1510;
+      --dust: #1A1208;
+      --sun: #E8C870;
+      --ash: #6A5C44;
+      --pale: #EAE0CC;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--void);
+      color: var(--bone);
+      font-family: 'Crimson Pro', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* ─── GRAIN OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 3rem;
+      background: linear-gradient(to bottom, rgba(6,4,2,0.95) 0%, transparent 100%);
+      border-bottom: 1px solid rgba(139,42,26,0.2);
+    }
+
+    .nav-logo {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 900;
+      font-size: 1.4rem;
+      letter-spacing: 0.3em;
+      color: var(--rust);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 2.5rem;
+    }
+
+    nav a {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      color: var(--ash);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    nav a:hover { color: var(--sun); }
+
+    /* ─── HERO ─── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 6rem 2rem 4rem;
+    }
+
+    /* Desert horizon gradient */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 40% at 50% 110%, rgba(139,42,26,0.35) 0%, transparent 70%),
+        radial-gradient(ellipse 100% 60% at 50% 100%, rgba(184,150,96,0.12) 0%, transparent 60%),
+        linear-gradient(to bottom, #060402 0%, #100A04 40%, #1A0E06 70%, #0A0602 100%);
+    }
+
+    /* Horizon line */
+    #hero::after {
+      content: '';
+      position: absolute;
+      bottom: 32%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(139,42,26,0.6), rgba(232,200,112,0.4), rgba(139,42,26,0.6), transparent);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.5em;
+      color: var(--rust);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.3s forwards;
+    }
+
+    h1 {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 900;
+      font-size: clamp(5rem, 18vw, 14rem);
+      line-height: 0.88;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      color: var(--pale);
+      opacity: 0;
+      animation: fadeUp 0.8s 0.5s forwards;
+      position: relative;
+    }
+
+    h1 .dead {
+      display: block;
+      color: var(--pale);
+      text-shadow: 0 0 120px rgba(139,42,26,0.5);
+    }
+
+    h1 .sands {
+      display: block;
+      color: var(--rust);
+      -webkit-text-stroke: 1px var(--blood);
+    }
+
+    .hero-tagline {
+      font-style: italic;
+      font-weight: 300;
+      font-size: 1.2rem;
+      color: var(--ash);
+      margin-top: 2rem;
+      letter-spacing: 0.05em;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s forwards;
+    }
+
+    .hero-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: rgba(139,42,26,0.7);
+      margin-top: 3rem;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp 0.8s 1.1s forwards;
+    }
+
+    .scroll-cue {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 1.5s forwards;
+    }
+
+    .scroll-cue span {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.4em;
+      color: var(--ash);
+      text-transform: uppercase;
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--rust), transparent);
+      animation: pulse-line 2s ease-in-out infinite;
+    }
+
+    /* ─── SAND DUNES SVG ─── */
+    .dunes {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 35%;
+    }
+
+    /* ─── SECTIONS ─── */
+    section {
+      padding: 6rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.5em;
+      color: var(--rust);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, rgba(139,42,26,0.5), transparent);
+    }
+
+    h2 {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 700;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+      line-height: 1;
+      color: var(--pale);
+      margin-bottom: 1.5rem;
+    }
+
+    /* ─── ABOUT ─── */
+    #about {
+      border-top: 1px solid rgba(139,42,26,0.2);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+      margin-top: 3rem;
+    }
+
+    .about-text p {
+      color: var(--bone);
+      margin-bottom: 1.2rem;
+      font-size: 1.05rem;
+    }
+
+    .about-text p em { color: var(--sun); font-style: italic; }
+
+    .stat-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .stat {
+      border-left: 2px solid var(--rust);
+      padding-left: 1.5rem;
+    }
+
+    .stat-num {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 900;
+      font-size: 3rem;
+      color: var(--rust);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--ash);
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    /* ─── DEVLOG ─── */
+    #devlog {
+      border-top: 1px solid rgba(139,42,26,0.2);
+    }
+
+    .log-entries {
+      margin-top: 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .log-entry {
+      background: rgba(26,18,8,0.6);
+      border: 1px solid rgba(139,42,26,0.15);
+      border-left: 3px solid var(--rust);
+      padding: 2rem 2.5rem;
+      transition: background 0.3s, border-color 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .log-entry::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, rgba(139,42,26,0.05) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .log-entry:hover {
+      background: rgba(26,18,8,0.9);
+      border-color: rgba(139,42,26,0.5);
+    }
+
+    .log-date {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      color: var(--rust);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .log-title {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      color: var(--pale);
+      letter-spacing: 0.02em;
+      margin-bottom: 0.8rem;
+    }
+
+    .log-body {
+      color: var(--ash);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .log-tag {
+      display: inline-block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      padding: 0.2rem 0.6rem;
+      background: rgba(139,42,26,0.2);
+      border: 1px solid rgba(139,42,26,0.4);
+      color: var(--rust);
+      text-transform: uppercase;
+      margin-top: 1rem;
+      margin-right: 0.4rem;
+    }
+
+    .placeholder-note {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      color: rgba(106,92,68,0.6);
+      text-align: center;
+      padding: 2rem;
+      border: 1px dashed rgba(139,42,26,0.2);
+      margin-top: 1rem;
+    }
+
+    /* ─── LOCATIONS FORM ─── */
+    #locations {
+      border-top: 1px solid rgba(139,42,26,0.2);
+    }
+
+    .form-intro {
+      color: var(--ash);
+      font-size: 1.05rem;
+      max-width: 60ch;
+      margin-top: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .form-intro em { color: var(--bone); font-style: normal; }
+
+    .location-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-field.full { grid-column: 1 / -1; }
+
+    label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      color: var(--rust);
+      text-transform: uppercase;
+    }
+
+    input, textarea, select {
+      background: rgba(16,10,4,0.8);
+      border: 1px solid rgba(139,42,26,0.3);
+      border-bottom: 1px solid rgba(139,42,26,0.6);
+      color: var(--bone);
+      font-family: 'Crimson Pro', Georgia, serif;
+      font-size: 1rem;
+      padding: 0.9rem 1rem;
+      outline: none;
+      transition: border-color 0.3s, background 0.3s;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--rust);
+      background: rgba(26,14,6,0.9);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 130px;
+    }
+
+    select option { background: #100A04; }
+
+    .form-submit {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .btn-submit {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      background: var(--rust);
+      color: var(--pale);
+      border: none;
+      padding: 1rem 3rem;
+      cursor: crosshair;
+      transition: background 0.3s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, rgba(255,255,255,0.05), transparent);
+    }
+
+    .btn-submit:hover {
+      background: var(--blood);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:active { transform: translateY(0); }
+
+    .form-note {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: rgba(106,92,68,0.7);
+    }
+
+    /* Success message */
+    .form-success {
+      display: none;
+      grid-column: 1 / -1;
+      background: rgba(139,42,26,0.1);
+      border: 1px solid rgba(139,42,26,0.4);
+      padding: 1.5rem 2rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      color: var(--sun);
+      text-transform: uppercase;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid rgba(139,42,26,0.2);
+      padding: 3rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-logo {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 900;
+      font-size: 1.8rem;
+      letter-spacing: 0.1em;
+      color: var(--rust);
+      text-transform: uppercase;
+    }
+
+    .footer-logo span { color: rgba(139,42,26,0.4); }
+
+    .footer-copy {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: rgba(106,92,68,0.5);
+      text-transform: uppercase;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .footer-links a {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--ash);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    .footer-links a:hover { color: var(--sun); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse-line {
+      0%, 100% { opacity: 0.3; transform: scaleY(1); }
+      50%       { opacity: 1;   transform: scaleY(1.15); }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 700px) {
+      nav { padding: 1rem 1.5rem; }
+      nav ul { gap: 1.2rem; }
+      .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .location-form { grid-template-columns: 1fr; }
+      .form-field.full { grid-column: 1; }
+      .form-submit { flex-direction: column; align-items: flex-start; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ─── CRACK DIVIDER ─── */
+    .crack-divider {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(139,42,26,0.4), transparent);
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="#hero">Dead Sands</a>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#devlog">Devlog</a></li>
+      <li><a href="#locations">Submit Location</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-content">
+      <p class="hero-eyebrow">// Solo dev project — Southern New Mexico</p>
+      <h1>
+        <span class="dead">Dead</span>
+        <span class="sands">Sands</span>
+      </h1>
+      <p class="hero-tagline">Something is wrong beneath the desert floor.</p>
+      <p class="hero-sub">Survival Horror &nbsp;·&nbsp; Open World &nbsp;·&nbsp; In Development</p>
+    </div>
+
+    <!-- Dune silhouette -->
+    <svg class="dunes" viewBox="0 0 1440 300" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="duneGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1A0E06" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#060402" stop-opacity="1"/>
+        </linearGradient>
+      </defs>
+      <!-- Back dunes -->
+      <path d="M0,200 Q120,120 300,180 Q480,240 600,150 Q720,60 900,140 Q1080,220 1200,160 Q1320,100 1440,170 L1440,300 L0,300 Z"
+            fill="rgba(26,14,6,0.5)"/>
+      <!-- Mid dunes -->
+      <path d="M0,240 Q200,170 380,220 Q560,270 700,200 Q840,130 1020,210 Q1200,290 1440,230 L1440,300 L0,300 Z"
+            fill="rgba(16,10,4,0.8)"/>
+      <!-- Front dunes -->
+      <path d="M0,270 Q180,230 360,260 Q540,290 720,250 Q900,210 1080,260 Q1260,310 1440,265 L1440,300 L0,300 Z"
+            fill="#060402"/>
+    </svg>
+
+    <div class="scroll-cue">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <p class="section-label">01 — About the Game</p>
+    <h2>What Waits<br/>in the Heat</h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>
+          <em>Dead Sands</em> is a survival horror game set across the desolate basin and range country of Southern New Mexico — a land of brutal sun, ancient silence, and things that should not exist.
+        </p>
+        <p>
+          You are stranded. Your vehicle is gone. The nearest town is a two-day walk across open desert — if the desert were safe. It is not.
+        </p>
+        <p>
+          Manage heat, thirst, and exposure while investigating the disappearances that have plagued this stretch of land for decades. The danger is real. The landscape is your enemy as much as anything else.
+        </p>
+        <p>
+          Built by a solo developer, learning in public. Every location, mechanic, and horror is a work in progress — and this site is where you can follow along.
+        </p>
+      </div>
+      <div class="stat-block">
+        <div class="stat">
+          <div class="stat-num">Solo</div>
+          <div class="stat-label">Developer — Learning as I go</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">NM</div>
+          <div class="stat-label">Setting — Southern New Mexico desert</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">WIP</div>
+          <div class="stat-label">Status — Early development</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">Open</div>
+          <div class="stat-label">To community location suggestions</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEVLOG -->
+  <section id="devlog">
+    <p class="section-label">02 — Development Log</p>
+    <h2>What's<br/>Been Built</h2>
+
+    <div class="log-entries">
+
+      <!-- Entry 1 -->
+      <div class="log-entry">
+        <div class="log-date">// Entry 001 — April 2026</div>
+        <div class="log-title">The Desert Takes Shape</div>
+        <p class="log-body">
+          The project is officially underway. Spent the first weeks settling on the engine, laying out the core design pillars, and mapping the initial playable zone — a stretch of dry basin between two mesa ridges. The horizon system is in. The sun moves. It's already uncomfortable in the right way.
+        </p>
+        <span class="log-tag">World Building</span>
+        <span class="log-tag">Engine Setup</span>
+      </div>
+
+      <!-- Entry 2 — placeholder -->
+      <div class="log-entry">
+        <div class="log-date">// Entry 002 — Coming Soon</div>
+        <div class="log-title">First Mechanics Pass</div>
+        <p class="log-body">
+          Next update will cover the core survival loop: heat exposure, water mechanics, and the day/night danger system. Spoiler: the nights are worse than the days.
+        </p>
+        <span class="log-tag">Gameplay</span>
+        <span class="log-tag">Survival Systems</span>
+      </div>
+
+    </div>
+
+    <p class="placeholder-note">// More entries will appear as development progresses. Check back.</p>
+  </section>
+
+  <!-- LOCATION SUBMISSION -->
+  <section id="locations">
+    <p class="section-label">03 — Community</p>
+    <h2>Know a<br/>Cursed Place?</h2>
+    <p class="form-intro">
+      Southern New Mexico is full of <em>strange, forgotten, and unsettling</em> real locations.
+      If you know somewhere — an abandoned structure, a remote stretch of road, a place with a dark history — submit it below.
+      Good ideas may appear in the game.
+    </p>
+
+    <div class="location-form" id="locationForm">
+
+      <div class="form-field">
+        <label for="name">Your Name</label>
+        <input type="text" id="name" name="name" placeholder="Anonymous is fine" autocomplete="off"/>
+      </div>
+
+      <div class="form-field">
+        <label for="email">Email (optional)</label>
+        <input type="email" id="email" name="email" placeholder="For a credit if we use it" autocomplete="off"/>
+      </div>
+
+      <div class="form-field full">
+        <label for="location-name">Location Name</label>
+        <input type="text" id="location-name" name="location-name" placeholder="e.g. The Jornada del Muerto, Carrizozo Malpais..." autocomplete="off"/>
+      </div>
+
+      <div class="form-field">
+        <label for="region">General Region</label>
+        <select id="region" name="region">
+          <option value="" disabled selected>— Select area —</option>
+          <option>White Sands / Tularosa Basin</option>
+          <option>Jornada del Muerto</option>
+          <option>Chihuahuan Desert (general)</option>
+          <option>Guadalupe Mountains area</option>
+          <option>Organ Mountains</option>
+          <option>El Paso borderlands</option>
+          <option>Other / Unknown</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="vibe">Atmosphere / Vibe</label>
+        <select id="vibe" name="vibe">
+          <option value="" disabled selected>— Best describes it —</option>
+          <option>Abandoned / Forgotten</option>
+          <option>Historically dark</option>
+          <option>Geologically strange</option>
+          <option>Isolated / Remote</option>
+          <option>Rumored haunted / folkloric</option>
+          <option>Just feels wrong</option>
+        </select>
+      </div>
+
+      <div class="form-field full">
+        <label for="description">Tell Me About It</label>
+        <textarea id="description" name="description" placeholder="What makes this place worth including? History, atmosphere, what you saw or felt, why it belongs in a horror game..."></textarea>
+      </div>
+
+      <div class="form-submit">
+        <button class="btn-submit" onclick="handleSubmit(event)">Transmit Location</button>
+        <span class="form-note">// Submissions are read personally. No spam, no mailing list.</span>
+      </div>
+
+      <div class="form-success" id="formSuccess">
+        ✓ &nbsp; Transmission received. If your location makes it into the game, you'll hear from us.
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div>
+      <div class="footer-logo">Dead <span>///</span> Sands</div>
+      <div class="footer-copy" style="margin-top:0.5rem">Southern New Mexico Horror &nbsp;·&nbsp; Solo Dev</div>
+    </div>
+    <div class="footer-links">
+      <a href="#devlog">Devlog</a>
+      <a href="#locations">Submit Location</a>
+      <a href="#">Newsletter</a>
+    </div>
+    <div class="footer-copy">© 2026 Dead Sands. All rights reserved.</div>
+  </footer>
+
+  <script>
+    // Form submission handler (demo — wire to backend of choice)
+    function handleSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const locName = document.getElementById('location-name').value.trim();
+
+      if (!locName) {
+        document.getElementById('location-name').style.borderColor = 'var(--rust)';
+        document.getElementById('location-name').focus();
+        return;
+      }
+
+      // Show success
+      document.getElementById('formSuccess').style.display = 'block';
+
+      // Reset fields
+      ['name','email','location-name','description'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('region').selectedIndex = 0;
+      document.getElementById('vibe').selectedIndex = 0;
+    }
+
+    // Subtle scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.log-entry, .stat').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
