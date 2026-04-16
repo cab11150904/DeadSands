@@ -45,6 +45,11 @@
 
     /* ─── NAV ─── */
     nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -177,7 +182,7 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
-      padding: 4rem 2rem 4rem;
+      padding: 6rem 2rem 4rem;
       max-width: 100%;   /* override section max-width so scroll-cue centers on viewport */
     }
 
@@ -265,35 +270,7 @@
       animation: fadeUp 0.8s 1.1s forwards;
     }
 
-    .scroll-cue {
-      position: absolute;
-      bottom: 2.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.6rem;
-      opacity: 0;
-      animation: fadeUp 0.8s 1.5s forwards;
-      white-space: nowrap;
-    }
 
-    .scroll-cue span {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.82rem;
-      letter-spacing: 0.5em;
-      color: var(--pale);
-      text-transform: uppercase;
-      text-shadow: 0 0 12px rgba(212,196,160,0.5);
-    }
-
-    .scroll-line {
-      width: 2px;
-      height: 50px;
-      background: linear-gradient(to bottom, var(--pale), transparent);
-      animation: pulse-line 2s ease-in-out infinite;
-    }
 
     /* ─── DUNES ─── */
     .dunes {
@@ -728,10 +705,7 @@
             fill="#060402"/>
     </svg>
 
-    <div class="scroll-cue">
-      <span>Scroll</span>
-      <div class="scroll-line"></div>
-    </div>
+
   </section>
 
   <!-- ABOUT -->
